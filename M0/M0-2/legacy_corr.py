@@ -85,5 +85,5 @@ def main(): #主函数，读取配置->读取数据->计算->打印结果
     except Exception as e:
         print(f"程序运行失败：{e}")
 
-if _name_=="_main_":
+if __name__=="__main__":
     main() #启动程序
