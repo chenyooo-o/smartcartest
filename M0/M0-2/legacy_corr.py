@@ -40,7 +40,7 @@ def calculate(xs,ys):#计算相关系数
         dy = dy + b * b
         prod = prod + a * b
     
-    denom = dx * dy
+    denom = math.sqrt(dx * dy)
     r = prod / denom
     return n,mean_x,mean_y,r
 
