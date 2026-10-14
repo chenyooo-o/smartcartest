@@ -26,7 +26,8 @@ OUTPUT_DIR = "out"  # 输出目录
 
 data = []
 times = []
-cleaned = []
+cleaned_values = []
+cleaned_times = []
 
 print("=== 传感器数据分析 ===")
 
@@ -54,20 +55,21 @@ for v in data:
 var = acc / len(data)
 std = math.sqrt(var)
 
-# --- 剔除离群值 ---
-for v in data:
-    if abs(v-mean) > 2 * std:
-        data.remove(v)
-
+# --- 剔除离群值 ---   原代码中for循环按下标遍历，后续元素前移，可能遗漏离群值
+for v,t in zip(data,times):
+    if abs(v-mean) <= 2*std:
+        cleaned_values.append(v)
+        cleaned_times.append(t)
+        
 # --- 输出清洗后的数据 ---
 output_path = os.path.join("/", OUTPUT_DIR, OUTPUT_FILE)
 f = open(output_path, "w")
 writer = csv.writer(f)
 writer.writerow(["time", "value"])
-for v in cleaned:
-    writer.writerow([v])
+for t,v in zip(cleaned_times,cleaned_values):
+    writer.writerow([t,v])
 
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
-print("清洗后剩余 %d 条" % len(cleaned))
+print("清洗后剩余 %d 条" % len(cleaned_values))
 print("已保存到 %s" % output_path)
