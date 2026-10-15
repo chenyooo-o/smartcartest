@@ -62,7 +62,8 @@ for v,t in zip(data,times):
         cleaned_times.append(t)
         
 # --- 输出清洗后的数据 --- 
-output_path = os.path.join("/", OUTPUT_DIR, OUTPUT_FILE)
+os.makedirs(OUTPUT_DIR,exist_ok=True) #新建文件夹，若文件夹已存在，不报错，继续往下运行代码
+output_path = os.path.join(OUTPUT_DIR, OUTPUT_FILE)
 f = open(output_path, "w")
 writer = csv.writer(f)
 writer.writerow(["time", "value"])
