@@ -36,26 +36,32 @@ if not os.path.exists(INPUT_FILE):
     print(f"错误：{INPUT_FILE}不存在")
     exit(1)
 
-reader = csv.DictReader(open(INPUT_FILE, "r"))
+try:
+    with open(INPUT_FILE,"r",encoding="utf-8") as f:
+        reader = csv.DictReader(f)
 
-if "time" not in reader.fieldnames or "value" not in reader.fieldnames or not reader.fieldnames:
-    print("列名不符，需包含time和value列")
+        if "time" not in reader.fieldnames or "value" not in reader.fieldnames or not reader.fieldnames:
+            print("列名不符，需包含time和value列")
+            exit(1)
+
+        for row in reader:
+            try:
+                t = float(row["time"])
+                v = float(row["value"])
+                times.append(t)
+                data.append(v)
+
+            except ValueError:
+                print("错误：文件含非数值内容")
+                exit(1)
+    
+except Exception as e:
+    print(f"读取数据时发生错误：{e}")
     exit(1)
-
-for row in reader:
-    try:
-        t = float(row["time"])
-        v = float(row["value"])
-        times.append(t)
-        data.append(v)
-
-    except ValueError:
-        print("错误：文件含非数值内容")
-        exit(1)
 
 if not data:
     print("错误：文件为空")
-    exit(0)
+    exit(1)
 
 print("共读取 %d 条数据" % len(data))
 
@@ -79,13 +85,19 @@ for v,t in zip(data,times):
         cleaned_times.append(t)
         
 # --- 输出清洗后的数据 --- 
-os.makedirs(OUTPUT_DIR,exist_ok=True) #新建文件夹，若文件夹已存在，不报错，继续往下运行代码
-output_path = os.path.join(OUTPUT_DIR, OUTPUT_FILE)
-f = open(output_path, "w")
-writer = csv.writer(f)
-writer.writerow(["time", "value"])
-for t,v in zip(cleaned_times,cleaned_values):
-    writer.writerow([t,v])
+try:
+    os.makedirs(OUTPUT_DIR,exist_ok=True) #新建文件夹，若文件夹已存在，不报错，继续往下运行代码
+    output_path = os.path.join(OUTPUT_DIR, OUTPUT_FILE)
+
+    with open(output_path,"w",newline="",encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["time", "value"])
+        for t,v in zip(cleaned_times,cleaned_values):
+            writer.writerow([t,v])
+
+except Exception as e:
+    print(f"写入文件时发送错误：{e}")
+    exit(1)
 
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
