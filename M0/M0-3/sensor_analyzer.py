@@ -34,25 +34,28 @@ print("=== 传感器数据分析 ===")
 # --- 读取数据 ---
 if not os.path.exists(INPUT_FILE):
     print(f"错误：{INPUT_FILE}不存在")
+    exit(1)
 
 reader = csv.DictReader(open(INPUT_FILE, "r"))
-if "time" not in reader.fieldnames or "value" not in reader.fieldnames:
+
+if "time" not in reader.fieldnames or "value" not in reader.fieldnames or not reader.fieldnames:
     print("列名不符，需包含time和value列")
-    return
+    exit(1)
 
 for row in reader:
-    t = float(row["time"])
-    v = float(row["value"])
-    times.append(t)
-    data.append(v)
+    try:
+        t = float(row["time"])
+        v = float(row["value"])
+        times.append(t)
+        data.append(v)
 
-    if ValueError:
-        print("错误：第{row_num}行含非数值内容")
-
+    except ValueError:
+        print("错误：文件含非数值内容")
+        exit(1)
 
 if not data:
-    print("错误：该文件为空文件")
-    return
+    print("错误：文件为空")
+    exit(0)
 
 print("共读取 %d 条数据" % len(data))
 
@@ -88,3 +91,4 @@ print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
 print("清洗后剩余 %d 条" % len(cleaned_values))
 print("已保存到 %s" % output_path)
+
