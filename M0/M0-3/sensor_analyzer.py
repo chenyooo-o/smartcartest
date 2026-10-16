@@ -32,13 +32,27 @@ cleaned_times = []
 print("=== 传感器数据分析 ===")
 
 # --- 读取数据 ---
+if not os.path.exists(INPUT_FILE):
+    print(f"错误：{INPUT_FILE}不存在")
+
 reader = csv.DictReader(open(INPUT_FILE, "r"))
+if "time" not in reader.fieldnames or "value" not in reader.fieldnames:
+    print("列名不符，需包含time和value列")
+    return
 
 for row in reader:
     t = float(row["time"])
     v = float(row["value"])
     times.append(t)
     data.append(v)
+
+    if ValueError:
+        print("错误：第{row_num}行含非数值内容")
+
+
+if not data:
+    print("错误：该文件为空文件")
+    return
 
 print("共读取 %d 条数据" % len(data))
 
