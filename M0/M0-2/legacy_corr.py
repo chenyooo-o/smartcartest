@@ -6,7 +6,7 @@ CONFIG_PATH = "config.yaml"
 
 def load_config(config_path): #读取.yaml配置
     try:
-        with open(CONFIG_PATH) as f:
+        with open(config_path) as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
         print(f"错误：找不到配置文件{config_path}")
