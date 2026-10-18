@@ -1,6 +1,7 @@
 import yaml
 import csv
 import math
+import os
 
 CONFIG_PATH = "config.yaml"
 
@@ -94,7 +95,9 @@ def calculate(xs,ys):#计算相关系数
 def main(): #主函数，读取配置->读取数据->计算->打印结果
     try:
         cfg = load_config(CONFIG_PATH)
-        csv_path = cfg["input_csv"]
+        yaml_dir = os.path.dirname(os.path.abspath(CONFIG_PATH))
+        csv_path = os.path.join(yaml_dir, cfg["input_csv"])
+
         col_x = cfg["columns"]["x"]
         col_y = cfg["columns"]["y"]
 
