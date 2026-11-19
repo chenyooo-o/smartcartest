@@ -11,6 +11,14 @@ def generate_launch_description():
         output='screen'
     )
 
+    sensor_processor = Node(
+        package='sensor_nodes',
+        executable='sensor_processor',
+        name='node_b_filter',
+        output='screen'
+    )
+
     return LaunchDescription([
-        sensor_publisher
+        sensor_publisher,
+        sensor_processor
     ])
