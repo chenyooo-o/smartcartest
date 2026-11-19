@@ -11,6 +11,10 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
+        ('share/' + package_name + '/config', [
+            'config/robot1.yaml',
+            'config/robot2.yaml'
+        ]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
