@@ -15,8 +15,8 @@ setup(
     zip_safe=True,
     maintainer='yyo',
     maintainer_email='chen_yyo@qq.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Project LiDAR points onto camera images using ROS 2',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'sensor_projection = sensor_projection.projection_node:main',
         ],
     },
 )
