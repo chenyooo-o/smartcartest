@@ -1,3 +1,4 @@
+
 import os
 import math
 import statistics
@@ -49,6 +50,8 @@ class SensorProjectionNode(Node):
         self.bridge = CvBridge()
         self.saved_images = 0
         self.camera_info_received = False
+
+        # 完整记录每一组成功配对的时间差
         self.time_differences = []
         self.pair_count = 0
 
@@ -147,9 +150,9 @@ class SensorProjectionNode(Node):
 
         return (
             sr * cp * cy - cr * sp * sy,
-            cr * sp * cy + sr * cp * sy,
+            cr * cp * cy + sr * sp * sy,
             cr * cp * sy - sr * sp * cy,
-            cr * cp * cy + sr * sp * sy
+            cr * cp * cy + sr * sp * cy
         )
 
     def make_transform(self, parent, child, xyz, rpy):
@@ -268,7 +271,35 @@ class SensorProjectionNode(Node):
         ], dtype=np.float64)
 
     def synchronized_callback(self, scan_msg, image_msg):
-        """同步回调：获取 TF、投影激光点、发布并保存图像。"""
+        """同步回调：统计 ATS 配对，并投影激光点、发布和保存图像。"""
+
+        # 每触发一次回调，就代表 ATS 成功匹配了一对消息
+        # 在处理逻辑之前计数，避免 TF 或投影失败影响同步统计
+        scan_stamp = (
+            scan_msg.header.stamp.sec
+            + scan_msg.header.stamp.nanosec * 1e-9
+        )
+        image_stamp = (
+            image_msg.header.stamp.sec
+            + image_msg.header.stamp.nanosec * 1e-9
+        )
+
+        difference = abs(scan_stamp - image_stamp)
+
+        self.pair_count += 1
+        self.time_differences.append(difference)
+
+        # 每累计 10 组输出一次阶段统计
+        if self.pair_count % 10 == 0:
+            median_ms = statistics.median(
+                self.time_differences
+            ) * 1000.0
+
+            self.get_logger().info(
+                f'Synchronized pairs: {self.pair_count}, '
+                f'median time difference: {median_ms:.2f} ms'
+            )
+
         if not self.camera_info_received:
             self.get_logger().warning(
                 'Waiting for /camera/camera_info ...'
@@ -305,33 +336,6 @@ class SensorProjectionNode(Node):
             output_msg.header = image_msg.header
             self.image_publisher.publish(output_msg)
 
-            # 记录两路传感器的时间差
-            scan_stamp = (
-                scan_msg.header.stamp.sec
-                + scan_msg.header.stamp.nanosec * 1e-9
-            )
-            image_stamp = (
-                image_msg.header.stamp.sec
-                + image_msg.header.stamp.nanosec * 1e-9
-            )
-
-            difference = abs(scan_stamp - image_stamp)
-            self.time_differences.append(difference)
-            self.pair_count += 1
-
-            if len(self.time_differences) > 500:
-                self.time_differences.pop(0)
-
-            if self.pair_count % 10 == 0:
-                median_ms = statistics.median(
-                    self.time_differences
-                ) * 1000.0
-
-                self.get_logger().info(
-                    f'Synchronized pairs: {self.pair_count}, '
-                    f'median time difference: {median_ms:.2f} ms'
-                )
-
             # 保存投影图片
             if self.saved_images < self.max_images:
                 self.saved_images += 1
@@ -361,6 +365,29 @@ class SensorProjectionNode(Node):
             self.get_logger().error(
                 f'Projection failed: {exc}'
             )
+
+    def destroy_node(self):
+        """节点退出时输出完整同步统计，供 slop 实验记录。"""
+        if self.pair_count > 0 and self.time_differences:
+            median_ms = statistics.median(
+                self.time_differences
+            ) * 1000.0
+            min_ms = min(self.time_differences) * 1000.0
+            max_ms = max(self.time_differences) * 1000.0
+
+            self.get_logger().info(
+                'Final synchronization statistics: '
+                f'paired frames={self.pair_count}, '
+                f'median={median_ms:.2f} ms, '
+                f'min={min_ms:.2f} ms, '
+                f'max={max_ms:.2f} ms'
+            )
+        else:
+            self.get_logger().warning(
+                'Final synchronization statistics: no matched pairs.'
+            )
+
+        return super().destroy_node()
 
     def project_scan(self, scan_msg, image, transform):
         """将激光雷达二维点投影到相机光学坐标系和图像平面。"""
